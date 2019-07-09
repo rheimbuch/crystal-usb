@@ -21,7 +21,7 @@ class USB::Device
 
   def initialize(@unwrap : LibUSB::DeviceRef, @context : Context)
     r = LibUSB.get_device_descriptor(unwrap, out @device_descriptor)
-    raise "libusb_get_device_descriptor" if r < 0
+    raise LibUSBError.for(r, "libusb_get_device_descriptor") if r < 0
 
     LibUSB.ref_device(self)
 

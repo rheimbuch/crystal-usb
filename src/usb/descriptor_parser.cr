@@ -9,7 +9,7 @@ struct USB::DescriptorParser
 
     device.device_descriptor.configurations_count.times do |idx|
       r = LibUSB.get_config_descriptor(device, idx, out configuration_descriptor_ptr)
-      raise "libusb_get_config_descriptor" if r < 0
+      raise LibUSBError.for(r, "libusb_get_config_descriptor") if r < 0
 
       configurations << parse_configuration_descriptor(configuration_descriptor_ptr.value)
 
