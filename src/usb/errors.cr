@@ -7,24 +7,25 @@ module USB
   end
 
   class LibUSBError < Error
-    protected def initialize(error_code : Int32)
+    protected def initialize(error_code : Int32, message : String = "")
       raise ArgumentError.new("invalid error code: #{error_code}") unless error_code < 0
       @error_code = error_code
+      super(message)
     end
 
     MAPPING = Hash(Int32, LibUSBErrorType).new
 
-    def self.for(error_code : Int)
+    def self.for(error_code : Int, message : String = "")
       error_type = MAPPING[error_code]?
       if error_type
-        error_type.new
+        error_type.new(message)
       else
-        LibUSBError.new(error_code)
+        LibUSBError.new(error_code, message)
       end
     end
 
-    def self.for(error_code : LibUSB::Error)
-      for(error_code.value)
+    def self.for(error_code : LibUSB::Error, message : String = "")
+      for(error_code.value, message)
     end
   end
 
@@ -32,8 +33,8 @@ module USB
   macro lib_usb_error(name, err_code)
     class {{name}} < LibUSBError
       extend LibUSBErrorType
-      def initialize
-        super({{err_code}}.value)
+      def initialize(message : String)
+        super({{err_code}}.value, message)
       end
     end
 
