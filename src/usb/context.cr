@@ -15,7 +15,7 @@ class USB::Context
     devs = [] of Device
 
     count = LibUSB.get_device_list(self, out refs)
-    raise LibUSBError.for(count, "libusb_get_device_list") if count < 0
+    raise LibUSBError.for(count.to_i32, "libusb_get_device_list") if count < 0
 
     begin
       count.times do |n|
