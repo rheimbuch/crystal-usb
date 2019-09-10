@@ -15,6 +15,10 @@ module USB
 
     MAPPING = Hash(Int32, LibUSBErrorType).new
 
+    def error_code : Int32
+      @error_code
+    end
+
     def self.for(error_code : Int, message : String = "")
       error_type = MAPPING[error_code]?
       if error_type
