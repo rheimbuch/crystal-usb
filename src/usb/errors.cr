@@ -13,36 +13,21 @@ module USB
       super(message)
     end
 
-    MAPPING = Hash(Int32, LibUSBErrorType).new
-
     def error_code : Int32
       @error_code
     end
 
-    def self.for(error_code : Int, message : String = "")
-      error_type = MAPPING[error_code]?
-      if error_type
-        error_type.new(message)
-      else
-        LibUSBError.new(error_code, message)
-      end
-    end
 
-    def self.for(error_code : LibUSB::Error, message : String = "")
-      for(error_code.value, message)
-    end
   end
 
 
   macro lib_usb_error(name, err_code)
     class {{name}} < LibUSBError
-      extend LibUSBErrorType
+      include LibUSBErrorType
       def initialize(message : String)
         super({{err_code}}.value, message)
       end
     end
-
-    LibUSBError::MAPPING[{{err_code}}.value] = {{name}}
   end
 
   lib_usb_error IOError, LibUSB::Error::IO
@@ -59,4 +44,44 @@ module USB
   lib_usb_error NotSupportedError, LibUSB::Error::NOT_SUPPORTED
 
 
+  class LibUSBError < Error
+    def self.for(error_code : Int, message : String = "")
+      if code = LibUSB::Error.from_value? error_code
+        for(code, message)
+      else
+        LibUSBError.new(error_code, message)
+      end
+    end
+
+    def self.for(error_code : LibUSB::Error, message : String = "")
+      case error_code
+      when .io?
+        IOError.new(message)
+      when .invalid_param?
+        InvalidParamError.new(message)
+      when .access?
+        AccessError.new(message)
+      when .no_device?
+        NoDeviceError.new(message)
+      when .not_found?
+        NotFoundError.new(message)
+      when .busy?
+        BusyError.new(message)
+      when .timeout?
+        TimeoutError.new(message)
+      when .overflow?
+        OverflowError.new(message)
+      when .pipe?
+        PipeError.new(message)
+      when .interrupted?
+        InterruptedError.new(message)
+      when .no_mem?
+        NoMemoryError.new(message)
+      when .not_supported?
+        NotSupportedError.new(message)
+      else
+        raise ArgumentError.new("unrecognized error_code: #{error_code}")
+      end
+    end
+  end
 end
